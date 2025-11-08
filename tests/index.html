@@ -4,9 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="./style_leaderboard.css">
 
 </head>
-<body>
+<body>    
+    <div class="grid-container">
+        <nav class="navbar">
+            <div class="logo-container">
+                <div class="logo-text">AI Code Review</div>
+            </div>
+        </nav>
+        
+        <section class="hero-section">
+            <div class="leaderboard">
+            <div class="players-class">
+                <div class="tbl-class">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>AI Review</th>
+                                <th>Human Review</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body">
+                            
+                        </tbody>
+                    </table>
+                </div>
+                <div class="add-score">
+                    <h2>Enter your code here</h2>
+                    <div class="score-form">
+                        <div class="form-player">
+                            <label for="player-name">Your Code</label>
+                            <input type="text" id="player-name" placeholder="Enter your code" required>
+                        </div>
+                        <button type="button" class="submit-btn" id="score-id">Send your Code to AI</button>
+                </div>
+                </div>
+            </div>
+               </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="copyright">
+                    <p>&copy; 2025 AI Review Generator. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+</div>
     <script src="./axios.min.js"></script>
     <script type="module" src="./test.js"></script>
 </body>

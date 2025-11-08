@@ -1,6 +1,5 @@
 import Ajv from 'https://esm.sh/ajv';
 const schema = {
-  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "array",
   "items": {
     "type": "object",
@@ -48,7 +47,6 @@ const schema = {
   "minItems": 0
 }
 const API_URL= "http://localhost:8080/Assignment2/api/review.php";
-getResponse()
 async function getResponse(){
     try{
         console.log("Fetching the response from:", API_URL);
@@ -79,5 +77,23 @@ async function getResponse(){
     }
     catch (error){
         console.error(error);
+    }
+}
+document.addEventListener("DOMContentLoaded", function(){
+    getResponse();
+    document.getElementById("score-id").addEventListener("click", addResponse);
+});
+
+async function addResponse(x)
+{
+    x.preventDefault();
+    console.log("hi")
+    try{
+        const code = document.getElementById("player-name").value.trim();
+        const response = await axios.post(API_URL,{code} );
+        console.log(response.data);
+        }
+    catch(error){
+        console.error("Error")
     }
 }
