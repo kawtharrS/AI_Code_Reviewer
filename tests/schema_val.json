@@ -1,5 +1,4 @@
-import Ajv from 'https://esm.sh/ajv';
-const schema = {
+{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "array",
   "items": {
@@ -46,38 +45,4 @@ const schema = {
     "additionalProperties": false
   },
   "minItems": 0
-}
-const API_URL= "http://localhost:8080/Assignment2/api/review.php";
-getResponse()
-async function getResponse(){
-    try{
-        console.log("Fetching the response from:", API_URL);
-        const response = await axios.get(API_URL);
-        console.log(response);
-
-        const contType = response.headers['content-type'];
-        if(contType  && contType.includes('application/json'))
-            console.log("is JSON");
-        else 
-            console.log("NOT a JSON")
-
-        if(Array.isArray(response.data))
-        {
-            console.log("is array");
-            console.log(response.data)
-        }
-        else{
-            console.log("is not an array")
-        }
-
-        const ajv = new Ajv();
-        const data= response.data;
-        const valid = ajv.validate(schema, data);
-        if (!valid) console.error(ajv.errors);
-        else console.log("Validation successful!");
-
-    }
-    catch (error){
-        console.error(error);
-    }
 }
