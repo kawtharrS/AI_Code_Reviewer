@@ -1,3 +1,52 @@
+import Ajv from 'https://esm.sh/ajv';
+const schema = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "severity",
+      "file",
+      "issue",
+      "suggestion"
+    ],
+    "properties": {
+      "severity": {
+        "type": "string",
+        "enum": ["high", "medium", "low"]
+      },
+      "file": {
+        "type": "string",
+        "description": "Filename where the issue was found"
+      },
+      "issue": {
+        "type": "string",
+        "description": "Description of the code issue",
+        "minLength": 1
+      },
+      "suggestion": {
+        "type": "string",
+        "description": "Specific suggestion to fix the issue",
+        "minLength": 1
+      },
+      "line": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Optional line number where issue occurs"
+      },
+      "rule_id": {
+        "type": "string",
+        "description": "Optional unique identifier for the rule violated"
+      },
+      "category": {
+        "type": "string",
+        "enum": ["security", "performance", "readability", "maintainability", "best-practice", "bug-risk"]
+      }
+    },
+    "additionalProperties": false
+  },
+  "minItems": 0
+}
 const API_URL= "http://localhost:8080/Assignment2/api/review.php";
 getResponse()
 async function getResponse(){
@@ -20,6 +69,13 @@ async function getResponse(){
         else{
             console.log("is not an array")
         }
+
+        const ajv = new Ajv();
+        const data= response.data;
+        const valid = ajv.validate(schema, data);
+        if (!valid) console.error(ajv.errors);
+        else console.log("Validation successful!");
+
     }
     catch (error){
         console.error(error);
