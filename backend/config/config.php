@@ -1,6 +1,5 @@
 <?php
-$_key_file = "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";
-$API_KEY = "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";
+$API_KEY = "./key.txt";
 $URL_OPENAI = "https://api.openai.com/v1/responses";
 $STEP_TYPE = "short"; // short | long | persice | helpful etc..
 $ALLOWED_SEVERITIES = ["high", "medium", "low"];
