@@ -2,7 +2,7 @@ import {addReview } from './human_review.js';
 import {displayCombinedReviews} from './combined_reviews.js'
 import {validateSchema} from './validate_schema.js'
 
-const API_URL = "http://localhost:8080/Assignment2/api/review.php";
+const API_URL = "http://localhost:8080/Assignment2/backend/public/review.php";
 
 let latestAIReview = null;
 let filename = "";

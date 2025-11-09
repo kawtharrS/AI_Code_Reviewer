@@ -1,86 +1,116 @@
 import Ajv from 'https://esm.sh/ajv';
 
 const mini_schema = {
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": [
-      "severity",
-      "file",
-      "issue",
-      "suggestion"
-    ],
-    "properties": {
-      "severity": {
-        "type": "string",
-        "enum": ["high", "medium", "low"]
-      },
-      "file": {
-        "type": "string",
-        "description": "Filename where the issue was found"
-      },
-      "issue": {
-        "type": "string",
-        "description": "Description of the code issue",
-        "minLength": 1
-      },
-      "suggestion": {
-        "type": "string",
-        "description": "Specific suggestion to fix the issue",
-        "minLength": 1
-      }
+  "type": "object",
+  "required": [
+    "severity",
+    "file", 
+    "issue",
+    "suggestion"
+  ],
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
     },
-    "additionalProperties": false
+    "file": {
+      "type": "string",
+      "description": "Filename where the issue was found"
+    },
+    "issue": {
+      "type": "string",
+      "description": "Description of the code issue",
+      "minLength": 1
+    },
+    "suggestion": {
+      "type": "string",
+      "description": "Specific suggestion to fix the issue",
+      "minLength": 1
+    }
   },
-  "minItems": 0
+  "additionalProperties": false
 }
 
 const extended_schema = {
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": [
-      "severity",
-      "file",
-      "issue",
-      "suggestion"
-    ],
-    "properties": {
-      "severity": {
-        "type": "string",
-        "enum": ["high", "medium", "low"]
-      },
-      "file": {
-        "type": "string",
-        "description": "Filename where the issue was found"
-      },
-      "issue": {
-        "type": "string",
-        "description": "Description of the code issue",
-        "minLength": 1
-      },
-      "suggestion": {
-        "type": "string",
-        "description": "Specific suggestion to fix the issue",
-        "minLength": 1
-      },
-      "line": {
-        "type": "integer",
-        "minimum": 1,
-        "description": "Optional line number where issue occurs"
-      },
-      "rule_id": {
-        "type": "string",
-        "description": "Optional unique identifier for the rule violated"
-      },
-      "category": {
-        "type": "string",
-        "enum": ["security", "performance", "readability", "maintainability", "best-practice", "bug-risk"]
-      }
+  "type": "object",
+  "required": [
+    "severity",
+    "file",
+    "issue",
+    "suggestion"
+  ],
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
     },
-    "additionalProperties": false
+    "file": {
+      "type": "string",
+      "description": "Filename where the issue was found"
+    },
+    "issue": {
+      "type": "string",
+      "description": "Description of the code issue",
+      "minLength": 1
+    },
+    "suggestion": {
+      "type": "string",
+      "description": "Specific suggestion to fix the issue",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional line number where issue occurs"
+    },
+    "rule_id": {
+      "type": "string",
+      "description": "Optional unique identifier for the rule violated"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["security", "performance", "readability", "maintainability", "best-practice", "bug-risk"]
+    }
   },
-  "minItems": 0
+  "additionalProperties": false
+}
+
+// If you want to support both single objects and arrays, use this version:
+const flexible_schema = {
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["severity", "file", "issue", "suggestion"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["high", "medium", "low"] },
+        "file": { "type": "string" },
+        "issue": { "type": "string", "minLength": 1 },
+        "suggestion": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "rule_id": { "type": "string" },
+        "category": { "type": "string", "enum": ["security", "performance", "readability", "maintainability", "best-practice", "bug-risk"] }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "file", "issue", "suggestion"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["high", "medium", "low"] },
+          "file": { "type": "string" },
+          "issue": { "type": "string", "minLength": 1 },
+          "suggestion": { "type": "string", "minLength": 1 },
+          "line": { "type": "integer", "minimum": 1 },
+          "rule_id": { "type": "string" },
+          "category": { "type": "string", "enum": ["security", "performance", "readability", "maintainability", "best-practice", "bug-risk"] }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  ]
 }
 
 export async function validateSchema(data) {
@@ -119,5 +149,27 @@ export async function validateSchema(data) {
       extended: ajv.errors,
       minimal: ajvMinimal.errors
     }
+  };
+}
+
+// Alternative function that uses the flexible schema
+export async function validateSchemaFlexible(data) {
+  const ajv = new Ajv();
+  
+  console.log("Attempting validation with flexible schema...");
+  const valid = ajv.validate(flexible_schema, data);
+  
+  if (valid) {
+    console.log("Validated with flexible schema");
+    return { 
+      valid: true,
+      data: data 
+    };
+  }
+  
+  console.log("Flexible schema failed");
+  return { 
+    valid: false, 
+    errors: ajv.errors
   };
 }
