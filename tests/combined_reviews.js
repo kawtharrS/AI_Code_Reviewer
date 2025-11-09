@@ -7,33 +7,40 @@ export async function displayCombinedReviews() {
 
         const humanData = humanResponse.data.data;
         const aiData = aiResponse.data.data;
+        const maxLength = Math.max(humanData.length, aiData.length);
         
         const tableBody = document.getElementById("review-results-body");
+        
+        if (maxLength === 0) {
+            tableBody.innerHTML = "<tr><td colspan='3'>No reviews found</td></tr>";
+            return;
+        }
 
         tableBody.innerHTML = '';
-
-        const human = humanData[i];
-        const ai = aiData[i];
+        for (let i = 0; i < maxLength; i++) {
+            const human = humanData[i];
+            const ai = aiData[i];
             
-        tableBody.innerHTML += `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${ai ? `
-                    <div>
-                        <span class="severity-${ai.severity}"><strong>${ai.severity}</strong></span>
-                        <div><strong>Issue:</strong> ${ai.issue_title}</div>
-                        <div><strong>Suggestion:</strong> ${ai.suggestion}</div>
-                    </div>
-                ` : 'No review'}</td>
-                <td>${human ? `
-                    <div>
-                        <span class="severity-${human.severity}"><strong>${human.severity}</strong></span>
-                        <div><strong>Issue:</strong> ${human.issue_title}</div>
-                        <div><strong>Suggestion:</strong> ${human.suggestion}</div>
-                    </div>
-                ` : 'No review'}</td>
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${ai ? `
+                        <div>
+                            <span class="severity-${ai.severity}"><strong>${ai.severity}</strong></span>
+                            <div><strong>Issue:</strong> ${ai.issue_title}</div>
+                            <div><strong>Suggestion:</strong> ${ai.suggestion}</div>
+                        </div>
+                    ` : 'No review'}</td>
+                    <td>${human ? `
+                        <div>
+                            <span class="severity-${human.severity}"><strong>${human.severity}</strong></span>
+                            <div><strong>Issue:</strong> ${human.issue_title}</div>
+                            <div><strong>Suggestion:</strong> ${human.suggestion}</div>
+                        </div>
+                    ` : 'No review'}</td>
                 </tr>
             `;
+        }
     } catch (error) {
         console.error("Error loading combined reviews:", error);
     }

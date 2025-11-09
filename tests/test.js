@@ -1,55 +1,6 @@
-import Ajv from 'https://esm.sh/ajv';
 import {addReview } from './human_review.js'; 
 import {displayCombinedReviews} from './combined_reviews.js'
-
-
-const schema = {
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": [
-      "severity",
-      "file",
-      "issue",
-      "suggestion"
-    ],
-    "properties": {
-      "severity": {
-        "type": "string",
-        "enum": ["high", "medium", "low"]
-      },
-      "file": {
-        "type": "string",
-        "description": "Filename where the issue was found"
-      },
-      "issue": {
-        "type": "string",
-        "description": "Description of the code issue",
-        "minLength": 1
-      },
-      "suggestion": {
-        "type": "string",
-        "description": "Specific suggestion to fix the issue",
-        "minLength": 1
-      },
-      "line": {
-        "type": "integer",
-        "minimum": 1,
-        "description": "Optional line number where issue occurs"
-      },
-      "rule_id": {
-        "type": "string",
-        "description": "Optional unique identifier for the rule violated"
-      },
-      "category": {
-        "type": "string",
-        "enum": ["security", "performance", "readability", "maintainability", "best-practice", "bug-risk"]
-      }
-    },
-    "additionalProperties": false
-  },
-  "minItems": 0
-}
+import {validateSchema} from './validate_schema.js'
 
 const API_URL = "http://localhost:8080/Assignment2/api/review.php";
 
@@ -92,11 +43,12 @@ async function getResponse() {
             console.log("is not an array");
         }
 
-        const ajv = new Ajv();
-        const data = response.data;
-        const valid = ajv.validate(schema, data);
-        if (!valid) console.error(ajv.errors);
-        else console.log("Validation successful!");
+        const validationResult = await validateSchema(response.data);
+        if (!validationResult.valid) {
+            console.error("Validation failed for both schemas");
+        } else {
+            console.log("Validation successful with", validationResult.schemaType, "schema!");
+        }
     } catch (error) {
         console.error("Error in getResponse:", error);
     }
@@ -130,6 +82,17 @@ async function addResponse(x) {
 
         console.log("Review response:", response.data);
         
+        const validationResult = await validateSchema(response.data);
+        
+        if (!validationResult.valid) {
+            alert("Error: Invalid response format from server. The response doesn't match any expected schema.");
+            document.getElementById("ai-review-results").innerHTML = 
+                "<p>Failed to analyze code. Please try again.</p>";
+            return;
+        }
+        
+        console.log(`Using ${validationResult.schemaType} schema`);
+        
         if (response.data && response.data.length > 0) {
             latestAIReview = response.data[0]; 
         }
@@ -139,6 +102,8 @@ async function addResponse(x) {
     } catch(error) {
         console.error("Error in addResponse:", error);
         console.error("Error details:", error.response?.data || error.message);
+        document.getElementById("ai-review-results").innerHTML = 
+            `<p>Error: ${error.response?.data?.message || error.message}</p>`;
     }
 }
 
@@ -201,4 +166,3 @@ async function saveAIReviewToDB(e) {
         alert("Failed to save AI review. Try again.");
     }
 }
-
