@@ -53,6 +53,24 @@ const API_URL = "http://localhost:8080/Assignment2/api/review.php";
 
 let latestAIReview = null;
 
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM loaded");
+    
+    displayCombinedReviews();
+    
+    const submitReviewBtn = document.getElementById("submit-review");
+    submitReviewBtn.addEventListener("click", function(e) {
+        addReview(e).then(() => {
+            displayCombinedReviews(); 
+        });
+    });
+    
+    const submitCodeBtn = document.getElementById("submit-code");
+    if (submitCodeBtn) {
+        submitCodeBtn.addEventListener("click", addResponse);
+    }
+});
+
 async function getResponse() {
     try {
         console.log("Fetching the response from:", API_URL);
@@ -110,9 +128,8 @@ async function addResponse(x) {
 
         console.log("Review response:", response.data);
         
-        // Store the AI review data
         if (response.data && response.data.length > 0) {
-            latestAIReview = response.data[0]; // Store the first review
+            latestAIReview = response.data[0]; 
         }
         
         displayReviewResults(response.data);
@@ -120,12 +137,6 @@ async function addResponse(x) {
     } catch(error) {
         console.error("Error in addResponse:", error);
         console.error("Error details:", error.response?.data || error.message);
-        
-        const aiRev = document.getElementById("ai-review-results"); 
-        aiRev.innerHTML = `
-            <p style="color: red;">Error getting review results. Please try again.</p>
-            <p style="font-size: 0.9em;">${error.response?.data?.message || error.message || 'Unknown error'}</p>
-        `;
     }
 }
 
@@ -136,27 +147,18 @@ function clearReviewResults() {
 }
 
 function displayReviewResults(reviews) {
-    if (!reviews || reviews.length === 0) {
-        document.getElementById("ai-review-results").innerHTML = 
-            "<p>No code review issues found. Great job!</p>";
-        return;
-    }
-
-    if (reviews.length === 1) {
-        const review = reviews[0];
-        const html = `
-            <div class="review-item">
-                <h3><strong>File:</strong> ${review.file}</h3>
-                <h3><strong>Severity:</strong> <span class="severity-${review.severity}">${review.severity}</span></h3>
-                <h3><strong>Issue:</strong> ${review.issue}</h3>
-                <h3><strong>Suggestion:</strong> ${review.suggestion}</h3>
-                ${review.rule_id ? `<h3><strong>Rule Id:</strong> ${review.rule_id}</h3>` : ''}
-                ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}
-                ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
-            </div>
-            <div style="margin-top: 20px;">
-                <button id="save-ai-review-btn" class="btn btn-primary">Save AI Review to Database</button>
-            </div>
+    const review = reviews[0];
+    const html = `
+        <div class="review-item">
+            <h3><strong>File:</strong> ${review.file}</h3>
+            <h3><strong>Severity:</strong> <span class="severity-${review.severity}">${review.severity}</span></h3>
+            <h3><strong>Issue:</strong> ${review.issue}</h3>
+            <h3><strong>Suggestion:</strong> ${review.suggestion}</h3>
+            ${review.rule_id ? `<h3><strong>Rule Id:</strong> ${review.rule_id}</h3>` : ''}
+            ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}                ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
+        </div>
+        <div style="margin-top: 20px;">
+            <button id="save-ai-review-btn" class="btn btn-primary">Save AI Review to Database</button>            </div>
         `;
         document.getElementById("ai-review-results").innerHTML = html;
         
@@ -164,42 +166,10 @@ function displayReviewResults(reviews) {
         if (saveBtn) {
             saveBtn.addEventListener("click", saveAIReviewToDB);
         }
-    } else {
-        const html = reviews.map((review, index) => `
-            <div class="review-item">
-                <h3><strong>File:</strong> ${review.file}</h3>
-                <h3><strong>Severity:</strong> <span class="severity-${review.severity}">${review.severity}</span></h3>
-                <h3><strong>Issue:</strong> ${review.issue}</h3>
-                <h3><strong>Suggestion:</strong> ${review.suggestion}</h3>
-                ${review.rule_id ? `<h3><strong>Rule Id:</strong> ${review.rule_id}</h3>` : ''}
-                ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}
-                ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
-            </div>
-            ${index < reviews.length - 1 ? '<hr>' : ''}
-        `).join('');
-        
-        document.getElementById("ai-review-results").innerHTML = html + `
-            <div style="margin-top: 20px;">
-                <button id="save-ai-review-btn" class="btn btn-primary">Save All AI Reviews to Database</button>
-            </div>
-        `;
-        
-        latestAIReview = reviews;
-        
-        const saveBtn = document.getElementById("save-ai-review-btn");
-        if (saveBtn) {
-            saveBtn.addEventListener("click", saveAIReviewToDB);
-        }
-    }
 }
 
 async function saveAIReviewToDB(e) {
     e.preventDefault();
-    
-    if (!latestAIReview) {
-        alert("No AI review data to save!");
-        return;
-    }
     
     try {
         const BASE_URL = "http://localhost:8080/Assignment2/api/";
@@ -230,24 +200,6 @@ async function saveAIReviewToDB(e) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("DOM loaded");
-    
-    displayCombinedReviews();
-    
-    const submitReviewBtn = document.getElementById("submit-review");
-    submitReviewBtn.addEventListener("click", function(e) {
-        addReview(e).then(() => {
-            displayCombinedReviews(); 
-        });
-    });
-    
-    const submitCodeBtn = document.getElementById("submit-code");
-    if (submitCodeBtn) {
-        submitCodeBtn.addEventListener("click", addResponse);
-    }
-});
-
 
 async function displayCombinedReviews() {
     try {
@@ -277,14 +229,14 @@ async function displayCombinedReviews() {
                     <td>${i + 1}</td>
                     <td>${ai ? `
                         <div>
-                            <span class="severity-${ai.severity}">${ai.severity}</span>
+                            <span class="severity-${ai.severity}"><strong>${ai.severity}</strong></span>
                             <div><strong>Issue:</strong> ${ai.issue_title}</div>
                             <div><strong>Suggestion:</strong> ${ai.suggestion}</div>
                         </div>
                     ` : 'No review'}</td>
                     <td>${human ? `
                         <div>
-                            <span class="severity-${human.severity}">${human.severity}</span>
+                            <span class="severity-${human.severity}"><strong>${human.severity}</strong></span>
                             <div><strong>Issue:</strong> ${human.issue_title}</div>
                             <div><strong>Suggestion:</strong> ${human.suggestion}</div>
                         </div>
