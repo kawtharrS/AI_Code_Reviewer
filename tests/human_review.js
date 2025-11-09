@@ -1,6 +1,6 @@
 export const BASE_URL = "http://localhost:8080/Assignment2/api/";
 
-export async function addReview(x) {
+export async function addReview(x, fileName) {
     x.preventDefault();
     
     try {
@@ -12,7 +12,9 @@ export async function addReview(x) {
         const line = document.getElementById("line-input").value.trim();
 
         const url = BASE_URL + "add_human_review.php";
+        console.log(fileName);
         const response = await axios.post(url, {
+            filename: fileName,
             severity: severity, 
             issue_title: issue, 
             suggestion: suggestion, 

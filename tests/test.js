@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     const submitReviewBtn = document.getElementById("submit-review");
     submitReviewBtn.addEventListener("click", function(e) {
-        addReview(e).then(() => {
+        addReview(e, filename).then(() => {
             displayCombinedReviews(); 
         });
     });

@@ -40,15 +40,23 @@ if (isset($data["suggestion"]) && $data["suggestion"] != "") {
     echo json_encode($response);
     return;
 }
-
+if (isset($data["filename"]) && $data["filename"] != "") {
+    $filename = $data["filename"]; 
+} else {
+    $response = [];
+    $response["success"] = false;
+    $response["error"] = "filename field is missing";
+    echo json_encode($response);
+    return;
+}
 $rule_id = $data["rule_id"] ?? "";
 $category = $data["category"] ?? "";
 $line_number = $data["line_number"] ?? 0;
 
 try {
-    $sql = "INSERT INTO security_findings (severity, issue_title, suggestion, rule_id, category, line_number) VALUES (?,?,?,?,?,?)";
+    $sql = "INSERT INTO security_findings (filename, severity, issue_title, suggestion, rule_id, category, line_number) VALUES (?,?,?,?,?,?,?)";
     $query = $mysql->prepare($sql);
-    $query->bind_param("sssssi", $severity, $issue_title, $suggestion, $rule_id, $category, $line_number);
+    $query->bind_param("ssssssi",$filename, $severity, $issue_title, $suggestion, $rule_id, $category, $line_number);
     
     if ($query->execute()) {
         $response = [];
