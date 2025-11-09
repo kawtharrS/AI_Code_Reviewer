@@ -34,11 +34,11 @@ function review_code($filename, $language, $code){
     try{
         $response = call_api("post", $URL_OPENAI, $header, $model_prompt);
         if(!$response){
-            error_log("null: " . $response, 3, $LOG_FILE);
+            error_log("null: " . print_r($response, true) . "\n", 3, $LOG_FILE);
             throw new Exception("Check the api version mate!");
         }
         if(isset($response["status"]) && $response["status"] != "completed"){
-            error_log("failed response: " . $response, 3, $LOG_FILE);
+            error_log("failed response: " . json_encode($response) . "\n", 3, $LOG_FILE);
             throw new Exception("Failed response from open ai");
         }
         if(isset($response["output"]) && !empty($response["output"])){
@@ -47,13 +47,13 @@ function review_code($filename, $language, $code){
                     if($obj["status"] == "completed"){
                         return $obj["content"][0]["text"];
                     } else {
-                        error_log("Incomplete review: " . $response, 3, $LOG_FILE);
+                        error_log("Incomplete review: " . json_encode($response) . "\n", 3, $LOG_FILE);
                         throw new Exception("Incomplete review!");
                     }
                 }
             }
         }
-        error_log("No output: " . $response, 3, $LOG_FILE);
+        error_log("No output: " . json_encode($response) . "\n", 3, $LOG_FILE);
         throw new Exception("No output was found in the agent response.");
     } catch (Exception $e){
         throw $e;

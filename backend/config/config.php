@@ -1,5 +1,5 @@
 <?php
-$_key_file = "key.txt";
+$_key_file = __DIR__ . "/key.txt";
 $API_KEY = file_get_contents($_key_file);
 $URL_OPENAI = "https://api.openai.com/v1/responses";
 $STEP_TYPE = "short"; // short | long | persice | helpful etc..
