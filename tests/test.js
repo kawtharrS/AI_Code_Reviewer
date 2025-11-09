@@ -5,7 +5,7 @@ import {validateSchema} from './validate_schema.js'
 const API_URL = "http://localhost:8080/Assignment2/api/review.php";
 
 let latestAIReview = null;
-
+let filename = "";
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOM loaded");
     
@@ -71,7 +71,8 @@ async function addResponse(x) {
     console.log("Submitting code for review...");
     
     try {
-        const code = document.getElementById("code-input").value.trim();
+        const code = document.getElementById("code-input");
+        console.log(code);
         
         if (!code) {
             document.getElementById("ai-review-results").innerHTML = 
@@ -92,7 +93,9 @@ async function addResponse(x) {
         );
 
         console.log("Review response:", response.data);
-        
+        console.log("filename", response.data[0].file);
+        filename = response.data[0].file;
+        console.log(filename);
         const validationResult = await validateSchema(response.data);
         
         if (!validationResult.valid) {
@@ -101,9 +104,7 @@ async function addResponse(x) {
                 "<p>Failed to analyze code. Please try again.</p>";
             return;
         }
-        
-        console.log(`Using ${validationResult.schemaType} schema`);
-        
+            
         if (response.data && response.data.length > 0) {
             latestAIReview = response.data[0]; 
         }
@@ -112,9 +113,8 @@ async function addResponse(x) {
 
     } catch(error) {
         console.error("Error in addResponse:", error);
-        console.error("Error details:", error.response?.data || error.message);
         document.getElementById("ai-review-results").innerHTML = 
-            `<p>Error: ${error.response?.data?.message || error.message}</p>`;
+            `<p>Error:error.message}</p>`;
     }
 }
 
@@ -136,8 +136,8 @@ function displayReviewResults(reviews) {
             ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}                
             ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
         </div>
-        <div style="margin-top: 20px;">
-            <button id="save-ai-review-btn" class="submit-btn">Save AI Review to Database</button>            
+        <div>
+            <button id="save-ai-review-btn" class="submit-btn">Save</button>            
         </div>
     `;
     document.getElementById("ai-review-results").innerHTML = html;
@@ -158,6 +158,7 @@ async function saveAIReviewToDB(e) {
         const reviewToSave = latestAIReview;
         
         const response = await axios.post(url, {
+            filename: filename,
             severity: reviewToSave.severity,
             issue_title: reviewToSave.issue,
             suggestion: reviewToSave.suggestion,

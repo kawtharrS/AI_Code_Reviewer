@@ -23,7 +23,7 @@ export async function displayCombinedReviews() {
             
             tableBody.innerHTML += `
                 <tr>
-                    <td>${i + 1}</td>
+                    <td>${ai.filename}</td>
                     <td>${ai ? `
                         <div>
                             <span class="severity-${ai.severity}"><strong>${ai.severity}</strong></span>
