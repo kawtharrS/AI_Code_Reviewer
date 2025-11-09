@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./style_leaderboard.css">
-
+    <title>AI Code Review</title>
+    <link rel="stylesheet" href="./style_code_review.css">
 </head>
 <body>    
     <div class="grid-container">
@@ -15,45 +14,61 @@
             </div>
         </nav>
         
-        <section class="hero-section">
-            <div class="leaderboard">
-            <div class="players-class">
-                <div class="tbl-class">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>AI Review</th>
-                                <th>Human Review</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body">
-                            
-                        </tbody>
-                    </table>
-                </div>
-                <div class="add-score">
-                    <h2>Enter your code here</h2>
-                    <div class="score-form">
-                        <div class="form-player">
-                            <label for="player-name">Your Code</label>
-                            <input type="text" id="player-name" placeholder="Enter your code" required>
+        <section class="main-section">
+            <div class="review-container">
+                <div class="content-wrapper">
+                    <div class="review-results">
+                        <table class="review-table">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>AI Review</th>
+                                    <th>Human Review</th>
+                                </tr>
+                            </thead>
+                            <tbody id="review-results-body">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code-input-section">
+                        <h2>Enter your code here</h2>
+                        <div class="code-form">
+                            <div class="form-group">
+                                <label for="code-input">Your Code</label>
+                                <textarea id="code-input" placeholder="Paste your code here" rows="6" required></textarea>
+                            </div>
+                            <button type="button" class="submit-btn" id="submit-code">Analyze Code with AI</button>
                         </div>
-                        <button type="button" class="submit-btn" id="score-id">Send your Code to AI</button>
-                </div>
+                    </div>
+                    <div class="ai-review-section">
+                        <h2>AI Review Results</h2>
+                        <div class="review-output">
+                            <div id="ai-review-results">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="code-input-section">
+                        <h2>Enter your code review</h2>
+                        <div class="code-form">
+                            <div class="form-group">
+                                <label for="code-input">Your Review</label>
+                                <textarea id="code-input" placeholder="place your code review here" rows="6" required></textarea>
+                            </div>
+                            <button type="button" class="submit-btn" id="submit-code">Submit your review</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-               </div>
         </section>
 
         <footer class="footer">
             <div class="footer-content">
                 <div class="copyright">
-                    <p>&copy; 2025 AI Review Generator. All rights reserved.</p>
+                    <p>&copy; 2025 AI Code Review. All rights reserved.</p>
                 </div>
             </div>
         </footer>
-</div>
+    </div>
     <script src="./axios.min.js"></script>
     <script type="module" src="./test.js"></script>
 </body>

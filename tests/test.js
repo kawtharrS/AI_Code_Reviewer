@@ -47,6 +47,7 @@ const schema = {
   "minItems": 0
 }
 const API_URL= "http://localhost:8080/Assignment2/api/review.php";
+
 async function getResponse(){
     try{
         console.log("Fetching the response from:", API_URL);
@@ -74,26 +75,61 @@ async function getResponse(){
         if (!valid) console.error(ajv.errors);
         else console.log("Validation successful!");
 
+
     }
     catch (error){
         console.error(error);
     }
 }
+
 document.addEventListener("DOMContentLoaded", function(){
-    getResponse();
-    document.getElementById("score-id").addEventListener("click", addResponse);
+    document.getElementById("submit-code").addEventListener("click", addResponse);
 });
 
 async function addResponse(x)
 {
     x.preventDefault();
+    clearReviewResults();
     console.log("hi")
     try{
-        const code = document.getElementById("player-name").value.trim();
+        const code = document.getElementById("code-input").value.trim(); 
         const response = await axios.post(API_URL,{code} );
         console.log(response.data);
+        
+        displayReviewResults(response.data);
         }
     catch(error){
         console.error("Error")
+        const aiRev = document.getElementById("ai-review-results"); 
+        aiRev.innerHTML = "<p>Error getting review results. Please try again.</p>";
     }
+}
+
+function clearReviewResults() {
+    const aiRev = document.getElementById("ai-review-results"); 
+    aiRev.innerHTML = ""; 
+}
+
+function displayReviewResults(reviews) {
+    const aiRev = document.getElementById("ai-review-results"); 
+        
+    if (!reviews || reviews.length === 0) {
+        aiRev.innerHTML = "<p>No code review issues found.</p>";
+        return;
+    }
+
+    const html = reviews.map(review => `
+        <div>
+            <h3><strong>File: </strong>${review.file}</h3>
+            <p><strong>Severity:</strong> <span>${review.severity}</span></p>
+            <p><strong>Issue:</strong> ${review.issue}</p>
+            <p><strong>Suggestion:</strong> ${review.suggestion}</p>
+            ${review.line ? `<p><strong>Line:</strong> ${review.line}</p>` : ''}
+            ${review.rule_id ? `<p><strong>Rule ID:</strong> ${review.rule_id}</p>` : ''}
+            ${review.category ? `<p><strong>Category:</strong> ${review.category}</p>` : ''}
+        </div>
+        <hr>
+    `).join('');
+
+    aiRev.innerHTML = html;
 }
