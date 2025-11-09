@@ -39,14 +39,12 @@ body {
     font-weight: bold;
 }
 
-/* ✅ Push content down */
 .main-content {
     width: 95%;
     max-width: 1300px;
     margin: 120px auto 40px;
 }
 
-/* ✅ Table */
 .review-table {
     width: 100%;
     border-collapse: collapse;
@@ -63,12 +61,12 @@ body {
 .review-table td {
     padding: 12px;
     border-bottom: 1px solid #ccc;
+    text-align:center;
 }
 .review-table tr:nth-child(even) {
     background: #e9e3f7;
 }
 
-/* ✅ Input Sections */
 .code-input-section,
 .ai-review-section {
     background: white;
@@ -93,7 +91,6 @@ textarea {
     font-family: monospace;
 }
 
-/* ✅ Buttons */
 .submit-btn {
     background: #7055a4;
     color: white;
@@ -108,7 +105,6 @@ textarea {
     background: #593f8a;
 }
 
-/* ✅ AI review output */
 .review-output {
     background: #f8f9fa;
     padding: 15px;

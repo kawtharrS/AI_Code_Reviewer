@@ -31,7 +31,6 @@ export async function addReview(x) {
             document.getElementById("rule-input").value = "";
             document.getElementById("category-input").value = "";
             document.getElementById("line-input").value = "";
-            getReviews();
         } else {
             alert("Failed to submit review. Please try again.");
         }
