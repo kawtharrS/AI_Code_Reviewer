@@ -3,10 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>AI Code Review</title>
+    <link rel="stylesheet" href="./style_code_review.css">
 
 </head>
 <body>
+    <div class="grid-container">
+
+        <nav class="navbar">
+            <div class="logo-container">
+                <div class="logo-text">AI Code Review</div>
+            </div>
+        </nav>
+        
+        <div class="notification" id="notification">
+            Review submitted successfully!
+        </div>
+
+        <section class="main-section">
+            <div class="main-content">
+
+                <table class="review-table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>AI Review</th>
+                            <th>Human Review</th>
+                        </tr>
+                    </thead>
+                    <tbody id="review-results-body">
+                    
+                    </tbody>
+                </table>
+                <br><br>
+                <div class="content-wrapper">
+
+                    <div class="code-input-section">
+                        <h2>Enter your code here</h2>
+                        <div class="code-form">
+                            <div class="form-group">
+                                <label for="code-input">Choose Your File</label>
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="code-input" class="submit-btn" placeholder="upload" accept=".js,.py,.java,.php,.html,.css,.c,.cpp,.ts,.json,.txt" name="avatar">
+                                    <div class="file-input-label">Click to upload a file</div>
+                                </div>
+                                <div class="file-name" id="file-name">No file selected</div>
+                            </div>
+                            <button type="button" class="submit-btn" id="submit-code">Analyze Code with AI</button>
+                        </div>
+                    </div>
+
+                    <div class="ai-review-section">
+                        <h2>AI Review Results</h2>
+                        <div class="review-output" id="ai-review-results">
+                            <p class="loading">Waiting for review...</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="code-input-section">
+                    <h2>Human Code Review</h2>
+                    <div class="code-form">
+                        <div class="human-review-grid">
+                            <div class="form-group">
+                                <label for="severity-input">Severity</label>
+                                <select id="severity-input" class="severity-select">
+                                    <option value="">Select Severity</option>
+                                    <option value="high">high</option>
+                                    <option value="medium">medium</option>
+                                    <option value="low">low</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="issue-input">Issue</label>
+                                <textarea id="issue-input" placeholder="Short identifier"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="suggestion-input">Suggestion</label>
+                                <textarea id="suggestion-input" placeholder="Remediation step"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="rule-input">Rule Id</label>
+                                <textarea id="rule-input" placeholder="e.g. SEC-001"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="category-input">Category</label>
+                                <textarea id="category-input" placeholder="Security / Performance"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="line-input">Line</label>
+                                <textarea id="line-input" placeholder="e.g. Line 45"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="button" class="submit-btn1" id="submit-review">Submit Review</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2025 AI Code Review. All rights reserved.</p>
+            </div>
+        </footer>
+
+    </div>
     <script src="./axios.min.js"></script>
     <script type="module" src="./test.js"></script>
 </body>
