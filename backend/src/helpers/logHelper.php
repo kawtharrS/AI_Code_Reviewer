@@ -1,5 +1,5 @@
 <?php
-include("config/settings.php");
+include __DIR__ . "/../../config/config.php";
 
 if (!file_exists($LOG_DIR)){
     mkdir($LOG_DIR, 0755, true);

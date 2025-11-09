@@ -1,0 +1,4 @@
+backend/config/key.txt
+
+*.log
+*key.txt
