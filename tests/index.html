@@ -51,10 +51,25 @@
                         <h2>Enter your code review</h2>
                         <div class="code-form">
                             <div class="form-group">
-                                <label for="code-input">Your Review</label>
-                                <textarea id="code-input" placeholder="place your code review here" rows="6" required></textarea>
+                                <label for="severity-input">Severity</label>
+                                <textarea id="severity-input" placeholder="eg. High, Meduim, Low" rows="6" required></textarea>
+
+                                <label for="issue-input">Issue</label>
+                                <textarea id="issue-input" placeholder="short identifier of the problem" rows="6" required></textarea>
+
+                                <label for="suggestion-input">Suggestion</label>
+                                <textarea id="suggestion-input" placeholder="concrete remediation step" rows="6" required></textarea>
+
+                                <label for="rule-input">Rule Id</label>
+                                <textarea id="rule-input" placeholder="Enter the rule id" rows="6" required></textarea>
+
+                                <label for="category-input">Category</label>
+                                <textarea id="category-input" placeholder="Enter the category" rows="6" required></textarea>
+
+                                <label for="line-input">Line</label>
+                                <textarea id="line-input" placeholder="eg. line 45" rows="6" required></textarea>
                             </div>
-                            <button type="button" class="submit-btn" id="submit-code">Submit your review</button>
+                            <button type="button" class="submit-btn" id="submit-review">Submit your review</button>
                         </div>
                     </div>
                 </div>

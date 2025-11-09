@@ -1,4 +1,5 @@
 import Ajv from 'https://esm.sh/ajv';
+
 const schema = {
   "type": "array",
   "items": {
@@ -132,4 +133,93 @@ function displayReviewResults(reviews) {
     `).join('');
 
     aiRev.innerHTML = html;
+}
+
+
+const BASE_URL = "http://localhost:8080/Assignment2/api/";
+
+document.addEventListener("DOMContentLoaded", function(){
+    console.log("DOM loaded");
+    getReviews();
+    document.getElementById("submit-review").addEventListener("click", addReview);
+})
+async function getReviews() {
+    try {
+        console.log("Fetching reviews from:", BASE_URL + "get_human_review.php"); // Fixed: added 's'
+        const url = BASE_URL + "get_human_review.php"; // Fixed: added 's'
+        const response = await axios.get(url);
+        const success = response.data.success; 
+        const data = response.data.data;
+        
+        if (success) {
+            console.log("Reviews data received:", data);
+            const tableBody = document.getElementById("review-results-body");
+            
+            if (data && data.length > 0) {
+                tableBody.innerHTML = data.map(review => `
+                    <tr>
+                        <td>${review.severity || ''}</td>
+                        <td>${review.issue_title || ''}</td>
+                        <td>${review.suggestion || ''}</td>
+                        <td>${review.rule_id || ''}</td>
+                        <td>${review.category || ''}</td>
+                        <td>${review.line_number || ''}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='6'>No reviews found</td></tr>";
+            }
+            
+        } else {
+            console.error("API error:", response.data.error || "Unknown error");
+        }
+    } catch (error) {
+        console.error("ERROR fetching reviews:", error);
+        const tableBody = document.getElementById("review-results-body");
+        tableBody.innerHTML = "<tr><td colspan='6'>Error loading reviews</td></tr>";
+    }
+}
+async function addReview(x)
+{
+    x.preventDefault();
+    
+    try {
+        const severity = document.getElementById("severity-input").value.trim();
+        const issue = document.getElementById("issue-input").value.trim();
+        const suggestion = document.getElementById("suggestion-input").value.trim();
+        const rule = document.getElementById("rule-input").value.trim();
+        const category = document.getElementById("category-input").value.trim();
+        const line = document.getElementById("line-input").value.trim();
+
+        
+        const url = BASE_URL + "add_human_review.php";
+        const response = await axios.post(url, {
+            severity: severity, 
+            issue_title: issue, 
+            suggestion:suggestion, 
+            rule_id: rule, 
+            category: category, 
+            line_number: line
+        });
+        
+        console.log("Add review response:", response.data);
+        
+        
+        if (response.data.success) {
+            alert("Your Review is Submitted Successfully!");
+            document.getElementById("severity-input").value="";
+            document.getElementById("issue-input").value="";
+            document.getElementById("suggestion-input").value="";
+            document.getElementById("rule-input").value="";
+            document.getElementById("category-input").value="";
+            document.getElementById("line-input").value="";
+            getReviews();
+        } else {
+            alert("Failed to submit review. Please try again.");
+        }
+        
+    } catch (error) {
+        console.error("Error adding review:", error);
+        alert("Failed to add your review. Try again.");
+    }
 }
