@@ -22,6 +22,17 @@ document.addEventListener("DOMContentLoaded", function() {
     if (submitCodeBtn) {
         submitCodeBtn.addEventListener("click", addResponse);
     }
+    document.getElementById("code-input").addEventListener("change", function () {
+    const file = this.files[0];
+    const fileNameLabel = document.getElementById("file-name");
+
+    if (file) {
+        fileNameLabel.textContent = file.name;
+    } else {
+        fileNameLabel.textContent = "No file selected";
+    }
+});
+
 });
 
 async function getResponse() {
@@ -122,17 +133,19 @@ function displayReviewResults(reviews) {
             <h3><strong>Issue:</strong> ${review.issue}</h3>
             <h3><strong>Suggestion:</strong> ${review.suggestion}</h3>
             ${review.rule_id ? `<h3><strong>Rule Id:</strong> ${review.rule_id}</h3>` : ''}
-            ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}                ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
+            ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}                
+            ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
         </div>
         <div style="margin-top: 20px;">
-            <button id="save-ai-review-btn" class="btn btn-primary">Save AI Review to Database</button>            </div>
-        `;
-        document.getElementById("ai-review-results").innerHTML = html;
-        
-        const saveBtn = document.getElementById("save-ai-review-btn");
-        if (saveBtn) {
-            saveBtn.addEventListener("click", saveAIReviewToDB);
-        }
+            <button id="save-ai-review-btn" class="submit-btn">Save AI Review to Database</button>            
+        </div>
+    `;
+    document.getElementById("ai-review-results").innerHTML = html;
+    
+    const saveBtn = document.getElementById("save-ai-review-btn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", saveAIReviewToDB);
+    }
 }
 
 async function saveAIReviewToDB(e) {

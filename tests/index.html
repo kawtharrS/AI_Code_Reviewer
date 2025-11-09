@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Code Review</title>
     <link rel="stylesheet" href="./style_code_review.css">
+
 </head>
 <body>
     <div class="grid-container">
@@ -14,6 +15,10 @@
                 <div class="logo-text">AI Code Review</div>
             </div>
         </nav>
+        
+        <div class="notification" id="notification">
+            Review submitted successfully!
+        </div>
 
         <section class="main-section">
             <div class="main-content">
@@ -26,7 +31,9 @@
                             <th>Human Review</th>
                         </tr>
                     </thead>
-                    <tbody id="review-results-body"></tbody>
+                    <tbody id="review-results-body">
+                    
+                    </tbody>
                 </table>
                 <br><br>
                 <div class="content-wrapper">
@@ -34,8 +41,14 @@
                     <div class="code-input-section">
                         <h2>Enter your code here</h2>
                         <div class="code-form">
-                            <label for="code-input">Your Code</label>
-                            <textarea id="code-input" placeholder="Paste your code here"></textarea>
+                            <div class="form-group">
+                                <label for="code-input">Choose Your File</label>
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="code-input" class="submit-btn" placeholder="upload" accept=".js,.py,.java,.php,.html,.css,.c,.cpp,.ts,.json,.txt">
+                                    <div class="file-input-label">Click to upload a file</div>
+                                </div>
+                                <div class="file-name" id="file-name">No file selected</div>
+                            </div>
                             <button type="button" class="submit-btn" id="submit-code">Analyze Code with AI</button>
                         </div>
                     </div>
@@ -53,25 +66,44 @@
                 <div class="code-input-section">
                     <h2>Human Code Review</h2>
                     <div class="code-form">
-                        <label for="severity-input">Severity</label>
-                        <textarea id="severity-input" placeholder="High / Medium / Low"></textarea>
+                        <div class="human-review-grid">
+                            <div class="form-group">
+                                <label for="severity-input">Severity</label>
+                                <select id="severity-input" class="severity-select">
+                                    <option value="">Select Severity</option>
+                                    <option value="high">high</option>
+                                    <option value="medium">medium</option>
+                                    <option value="low">low</option>
+                                </select>
+                            </div>
 
-                        <label for="issue-input">Issue</label>
-                        <textarea id="issue-input" placeholder="Short identifier"></textarea>
+                            <div class="form-group">
+                                <label for="issue-input">Issue</label>
+                                <textarea id="issue-input" placeholder="Short identifier"></textarea>
+                            </div>
 
-                        <label for="suggestion-input">Suggestion</label>
-                        <textarea id="suggestion-input" placeholder="Remediation step"></textarea>
+                            <div class="form-group">
+                                <label for="suggestion-input">Suggestion</label>
+                                <textarea id="suggestion-input" placeholder="Remediation step"></textarea>
+                            </div>
 
-                        <label for="rule-input">Rule Id</label>
-                        <textarea id="rule-input" placeholder="e.g. SEC-001"></textarea>
+                            <div class="form-group">
+                                <label for="rule-input">Rule Id</label>
+                                <textarea id="rule-input" placeholder="e.g. SEC-001"></textarea>
+                            </div>
 
-                        <label for="category-input">Category</label>
-                        <textarea id="category-input" placeholder="Security / Performance"></textarea>
+                            <div class="form-group">
+                                <label for="category-input">Category</label>
+                                <textarea id="category-input" placeholder="Security / Performance"></textarea>
+                            </div>
 
-                        <label for="line-input">Line</label>
-                        <textarea id="line-input" placeholder="e.g. Line 45"></textarea>
+                            <div class="form-group">
+                                <label for="line-input">Line</label>
+                                <textarea id="line-input" placeholder="e.g. Line 45"></textarea>
+                            </div>
+                        </div>
 
-                        <button type="button" class="submit-btn" id="submit-review">Submit Review</button>
+                        <button type="button" class="submit-btn1" id="submit-review">Submit Review</button>
                     </div>
                 </div>
 
@@ -85,7 +117,6 @@
         </footer>
 
     </div>
-
     <script src="./axios.min.js"></script>
     <script type="module" src="./test.js"></script>
 </body>
