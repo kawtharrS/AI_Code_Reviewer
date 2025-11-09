@@ -7,7 +7,7 @@ header("Content-Type: application/json; charset=UTF-8");
 $mockResponse = [
     [
         'severity' => 'high',
-        'file' => 'user_services.py',
+        'file' => 'user1.py',
         'issue' => 'No input validation for user registration',
         'suggestion' => 'Implement proper input validation using a schema validator',
         'line' => 45,

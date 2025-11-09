@@ -26,7 +26,6 @@ export async function addReview(x, fileName) {
         console.log("Add review response:", response.data);
         
         if (response.data.success) {
-            alert("Your Review is Submitted Successfully!");
             document.getElementById("severity-input").value = "";
             document.getElementById("issue-input").value = "";
             document.getElementById("suggestion-input").value = "";

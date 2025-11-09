@@ -12,11 +12,25 @@ document.addEventListener("DOMContentLoaded", function() {
     displayCombinedReviews();
     
     const submitReviewBtn = document.getElementById("submit-review");
-    submitReviewBtn.addEventListener("click", function(e) {
-        addReview(e, filename).then(() => {
-            displayCombinedReviews(); 
-        });
+    submitReviewBtn.addEventListener("click", async function(e) {
+        e.preventDefault();
+
+        try {
+            await addReview(e, filename);
+
+            if (latestAIReview) {
+                await saveAIReviewToDB(e);
+            }
+
+            displayCombinedReviews();
+
+            alert("Human and AI reviews saved successfully!");
+        } catch (error) {
+            console.error("Error saving reviews:", error);
+            alert("Failed to save reviews. Try again.");
+        }
     });
+
     
     const submitCodeBtn = document.getElementById("submit-code");
     if (submitCodeBtn) {
@@ -136,16 +150,11 @@ function displayReviewResults(reviews) {
             ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}                
             ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
         </div>
-        <div>
-            <button id="save-ai-review-btn" class="submit-btn">Save</button>            
-        </div>
+        
+
     `;
-    document.getElementById("ai-review-results").innerHTML = html;
-    
-    const saveBtn = document.getElementById("save-ai-review-btn");
-    if (saveBtn) {
-        saveBtn.addEventListener("click", saveAIReviewToDB);
-    }
+    const container = document.getElementById("ai-review-results"); 
+    container.innerHTML = html;
 }
 
 async function saveAIReviewToDB(e) {
@@ -170,7 +179,6 @@ async function saveAIReviewToDB(e) {
         console.log("Save AI review response:", response.data);
         
         if (response.data.success) {
-            alert("AI Review saved to database successfully!");
             displayCombinedReviews(); 
         } else {
             alert("Failed to save AI review: " + (response.data.error || "Unknown error"));
