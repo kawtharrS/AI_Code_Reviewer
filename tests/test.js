@@ -85,20 +85,35 @@ async function addResponse(x) {
     console.log("Submitting code for review...");
     
     try {
-        const code = document.getElementById("code-input");
-        console.log(code);
+        const codeInput = document.getElementById("code-input");
         
-        if (!code) {
+        if (!codeInput || !codeInput.files || codeInput.files.length === 0) {
             document.getElementById("ai-review-results").innerHTML = 
-                "<p>Please enter some code to review.</p>";
+                "<p>Please select a file to review.</p>";
+            return;
+        }
+        
+        const file = codeInput.files[0];
+        
+        // Read the file content
+        const fileContent = await readFileAsText(file);
+        
+        if (!fileContent) {
+            document.getElementById("ai-review-results").innerHTML = 
+                "<p>Unable to read file content.</p>";
             return;
         }
         
         document.getElementById("ai-review-results").innerHTML = 
             "<p>Analyzing code...</p>";
         
+        // Send as JSON with the actual code content
         const response = await axios.post(API_URL, 
-            { code },
+            { 
+                code: fileContent,
+                file: file.name,
+                language: getLanguageFromFilename(file.name)
+            },
             {
                 headers: {
                     'Content-Type': 'application/json'
@@ -107,29 +122,88 @@ async function addResponse(x) {
         );
 
         console.log("Review response:", response.data);
-        console.log("filename", response.data[0].file);
-        filename = response.data[0].file;
-        console.log(filename);
-        const validationResult = await validateSchema(response.data);
+
+        // Check if response has the expected structure
+        if (!response.data || typeof response.data !== 'object') {
+            throw new Error("Invalid response format from server");
+        }
+
+        // The API returns the findings in several possible shapes. Prefer `response.data.review`.
+        let reviewData = null;
+        if (response.data.review && Array.isArray(response.data.review)) {
+            reviewData = response.data.review;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+            // some older endpoints may return data as an array directly
+            reviewData = response.data.data;
+        } else if (Array.isArray(response.data)) {
+            reviewData = response.data;
+        } else if (response.data.data && response.data.data.review && Array.isArray(response.data.data.review)) {
+            reviewData = response.data.data.review;
+        }
+
+        if (!Array.isArray(reviewData)) {
+            console.error('Unexpected response structure, full response:', response.data);
+            throw new Error("Unexpected response structure");
+        }
+
+        console.log("Review data:", reviewData);
+        
+        const validationResult = await validateSchema(reviewData);
         
         if (!validationResult.valid) {
             alert("Error: Invalid response format from server. The response doesn't match any expected schema.");
+            console.error("Validation errors:", validationResult.errors);
             document.getElementById("ai-review-results").innerHTML = 
                 "<p>Failed to analyze code. Please try again.</p>";
             return;
         }
-            
-        if (response.data && response.data.length > 0) {
-            latestAIReview = response.data[0]; 
+        
+        if (reviewData && reviewData.length > 0) {
+            latestAIReview = reviewData[0];
+            filename = reviewData[0].file;
+            console.log("Stored filename:", filename);
         }
         
-        displayReviewResults(response.data);
+        displayReviewResults(reviewData);
 
     } catch(error) {
         console.error("Error in addResponse:", error);
         document.getElementById("ai-review-results").innerHTML = 
-            `<p>Error:error.message}</p>`;
+            `<p>Error: ${error.message}</p>`;
     }
+}
+
+// Helper function to read file content
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsText(file);
+    });
+}
+
+// Helper function to determine language from filename
+function getLanguageFromFilename(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const langMap = {
+        'js': 'javascript',
+        'jsx': 'javascript',
+        'ts': 'typescript',
+        'tsx': 'typescript',
+        'py': 'python',
+        'java': 'java',
+        'cpp': 'cpp',
+        'c': 'c',
+        'cs': 'csharp',
+        'php': 'php',
+        'rb': 'ruby',
+        'go': 'go',
+        'rs': 'rust',
+        'swift': 'swift',
+        'kt': 'kotlin'
+    };
+    return langMap[ext] || 'unknown';
 }
 
 function clearReviewResults() {

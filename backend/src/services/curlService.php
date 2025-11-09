@@ -1,38 +1,51 @@
 <?php
 
-function call_api(string $method, string $url, array $header = [], array $data = []): mixed {
-    $curl = curl_init();
-
-    switch (strtoupper($method)){
-        case "POST":
-            curl_setopt($curl, CURLOPT_POST, 1);
-            if($data){
-                if(array_filter($header, fn($h) => strpos($h, "application/json") !== false)){
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-                }else{
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-                }
-            }
-            break;
-        default:
-            if($data){
-                $url = sprintf("%s?%s", $url, http_build_query($data));
-            }
+function call_api(string $method, string $url, array $data = [], array $headers = []) {
+    if (empty($url)) {
+        throw new Exception("API URL cannot be empty");
     }
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
-    curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-
-    $result = curl_exec($curl);
-    if(!$result){
-        $error = curl_error($curl);
-        curl_close($curl);
-        throw new Exception("curl error: $error");
+    
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        throw new Exception("Invalid API URL: " . $url);
     }
-
-    curl_close($curl);
-    return json_decode($result, true);
+    
+    $ch = curl_init();
+    
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    
+    if (strtoupper($method) === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    } elseif (strtoupper($method) === 'GET') {
+        if (!empty($data)) {
+            $url .= '?' . http_build_query($data);
+            curl_setopt($ch, CURLOPT_URL, $url);
+        }
+    }
+    
+    if (!empty($headers)) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    }
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    
+    curl_close($ch);
+    
+    if ($response === false) {
+        throw new Exception("cURL error: " . $error);
+    }
+    
+    if ($http_code >= 400) {
+        throw new Exception("HTTP error {$http_code}: " . substr($response, 0, 200));
+    }
+    
+    return $response;
 }
+
 ?>
