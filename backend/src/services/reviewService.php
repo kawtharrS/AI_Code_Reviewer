@@ -1,8 +1,8 @@
 <?php
-include("./backend/src/schemas");
-include("./backend/src/services/curlService.php");
-include("./backend/config/config.php");
-include("./backend/src/helpers/logHelper.php");
+include __DIR__ . "/../schemas/schemas.php";
+include __DIR__ . "/curlService.php";
+include __DIR__ . "/../../config/config.php";
+include __DIR__ . "/../helpers/logHelper.php";
 
 function review_code($filename, $language, $code){
     global $MODEL_VERSION, $API_KEY, $SCHEMA, $STRICT, $STEP_TYPE, $URL_OPENAI, $LOG_FILE;

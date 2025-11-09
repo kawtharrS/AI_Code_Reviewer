@@ -1,7 +1,7 @@
 <?php
-include("./backend/src/helpers/responseHelper.php");
-include("./backend/src/services/fileService.php");
-include("./backend/src/services/reviewService.php");
+include __DIR__ . "/../src/helpers/responseHelper.php";
+include __DIR__ . '/../src/services/fileService.php';
+include __DIR__ . '/../src/services/reviewService.php';
 
 $UPLOAD_NAME = "userfile";
 
@@ -46,7 +46,7 @@ try{
     $review_result = review_code($filename, $language, $code);
 
     respond(true, "success",  ["review" => $review_result]);
-    
+
 } catch (Exception $e){
     respond(false, "Server error: " . $e->getMessage());
 }

@@ -1,5 +1,5 @@
 <?php
-include("./backend/config/config.php");
+include __DIR__ . "/../../config/config.php";
 
 $SCHEMA = ["type" => "object"];
 $SCHEMA["properties"] = [
