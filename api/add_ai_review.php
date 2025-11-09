@@ -12,7 +12,7 @@ $category = "";
 $line_number = "";
 
 if (isset($data["severity"]) && $data["severity"] != "") {
-    $severity = $data["severity"];
+    $severity = $data["severity"]; 
 } else {
     $response = [];
     $response["success"] = false;

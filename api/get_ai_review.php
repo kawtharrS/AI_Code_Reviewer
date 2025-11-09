@@ -2,7 +2,7 @@
 
     include("./connection.php");
 
-    $sql = "SELECT * FROM security_findings limit 5 ";
+    $sql = "SELECT * FROM ai_reviews limit 5 ";
     $query = $mysql->prepare($sql);
     $query->execute();
 

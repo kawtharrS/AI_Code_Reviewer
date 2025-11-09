@@ -89,6 +89,35 @@ async function addResponse(x) {
         const response = await axios.post(API_URL, { code } );
         console.log(response.data);
         displayReviewResults(response.data);
+        if (success) {
+            console.log("Reviews data received:", data);
+            const tableBody = document.getElementById("review-results-body");
+            
+            if (data && data.length > 0) {
+                tableBody.innerHTML = data.map(review => `
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <div>
+                                <div">
+                                    <span severity-${review.severity || 'medium'}">${review.severity || 'N/A'}</span>
+                                    ${review.category ? `<span class="category">${review.category}</span>` : ''}
+                                    ${review.rule_id ? `<span class="rule-id">${review.rule_id}</span>` : ''}
+                                    ${review.line_number ? `<span class="line-number">Line ${review.line_number}</span>` : ''}
+                                </div>
+                                <div><strong>Issue:</strong> ${review.issue_title || ''}</div>
+                                <div><strong>Suggestion:</strong> ${review.suggestion || ''}</div>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='3'>No reviews found</td></tr>";
+            }
+        } else {
+            console.error("API error:", response.data.error || "Unknown error");
+        }
     } catch(error) {
         console.error("Error");
         const aiRev = document.getElementById("ai-review-results"); 
@@ -125,18 +154,15 @@ function displayReviewResults(reviews) {
     aiRev.innerHTML = html;
 }
 
-// SINGLE DOMContentLoaded event listener
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOM loaded");
     
-    // Human review functionality
     getReviews();
     const submitReviewBtn = document.getElementById("submit-review");
     if (submitReviewBtn) {
         submitReviewBtn.addEventListener("click", addReview);
     }
     
-    // Code review functionality
     const submitCodeBtn = document.getElementById("submit-code");
     if (submitCodeBtn) {
         submitCodeBtn.addEventListener("click", addResponse);
