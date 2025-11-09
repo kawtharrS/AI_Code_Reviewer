@@ -45,7 +45,7 @@ try{
     //call the review service here
     $review_result = review_code($filename, $language, $code);
 
-    respond(true, "success",  ["review" => $review_result]);
+    respond(true, "success",  ["review" => [$review_result]]);
 
 } catch (Exception $e){
     respond(false, "Server error: " . $e->getMessage());
