@@ -1,5 +1,5 @@
 import Ajv from 'https://esm.sh/ajv';
-import { getReviews, addReview } from './human_review.js'; 
+import {addReview } from './human_review.js'; 
 
 const schema = {
   "type": "array",
@@ -51,6 +51,8 @@ const schema = {
 
 const API_URL = "http://localhost:8080/Assignment2/api/review.php";
 
+let latestAIReview = null;
+
 async function getResponse() {
     try {
         console.log("Fetching the response from:", API_URL);
@@ -76,95 +78,221 @@ async function getResponse() {
         if (!valid) console.error(ajv.errors);
         else console.log("Validation successful!");
     } catch (error) {
-        console.error(error);
+        console.error("Error in getResponse:", error);
     }
 }
 
 async function addResponse(x) {
     x.preventDefault();
     clearReviewResults();
-    console.log("hi");
+    console.log("Submitting code for review...");
+    
     try {
-        const code = document.getElementById("code-input").value.trim(); 
-        const response = await axios.post(API_URL, { code } );
-        console.log(response.data);
-        displayReviewResults(response.data);
-        if (success) {
-            console.log("Reviews data received:", data);
-            const tableBody = document.getElementById("review-results-body");
-            
-            if (data && data.length > 0) {
-                tableBody.innerHTML = data.map(review => `
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td>
-                            <div>
-                                <div">
-                                    <span severity-${review.severity || 'medium'}">${review.severity || 'N/A'}</span>
-                                    ${review.category ? `<span class="category">${review.category}</span>` : ''}
-                                    ${review.rule_id ? `<span class="rule-id">${review.rule_id}</span>` : ''}
-                                    ${review.line_number ? `<span class="line-number">Line ${review.line_number}</span>` : ''}
-                                </div>
-                                <div><strong>Issue:</strong> ${review.issue_title || ''}</div>
-                                <div><strong>Suggestion:</strong> ${review.suggestion || ''}</div>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tableBody.innerHTML = "<tr><td colspan='3'>No reviews found</td></tr>";
-            }
-        } else {
-            console.error("API error:", response.data.error || "Unknown error");
+        const code = document.getElementById("code-input").value.trim();
+        
+        if (!code) {
+            document.getElementById("ai-review-results").innerHTML = 
+                "<p>Please enter some code to review.</p>";
+            return;
         }
+        
+        document.getElementById("ai-review-results").innerHTML = 
+            "<p>Analyzing code...</p>";
+        
+        const response = await axios.post(API_URL, 
+            { code },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log("Review response:", response.data);
+        
+        // Store the AI review data
+        if (response.data && response.data.length > 0) {
+            latestAIReview = response.data[0]; // Store the first review
+        }
+        
+        displayReviewResults(response.data);
+
     } catch(error) {
-        console.error("Error");
+        console.error("Error in addResponse:", error);
+        console.error("Error details:", error.response?.data || error.message);
+        
         const aiRev = document.getElementById("ai-review-results"); 
-        aiRev.innerHTML = "<p>Error getting review results. Please try again.</p>";
+        aiRev.innerHTML = `
+            <p style="color: red;">Error getting review results. Please try again.</p>
+            <p style="font-size: 0.9em;">${error.response?.data?.message || error.message || 'Unknown error'}</p>
+        `;
     }
 }
 
 function clearReviewResults() {
     const aiRev = document.getElementById("ai-review-results"); 
-    aiRev.innerHTML = ""; 
+    aiRev.innerHTML = "";
+    latestAIReview = null; 
 }
 
 function displayReviewResults(reviews) {
-    const aiRev = document.getElementById("ai-review-results"); 
-        
     if (!reviews || reviews.length === 0) {
-        aiRev.innerHTML = "<p>No code review issues found.</p>";
+        document.getElementById("ai-review-results").innerHTML = 
+            "<p>No code review issues found. Great job!</p>";
         return;
     }
 
-    const html = reviews.map(review => `
-        <div>
-            <h3><strong>File: </strong>${review.file}</h3>
-            <p><strong>Severity:</strong> <span>${review.severity}</span></p>
-            <p><strong>Issue:</strong> ${review.issue}</p>
-            <p><strong>Suggestion:</strong> ${review.suggestion}</p>
-            ${review.line ? `<p><strong>Line:</strong> ${review.line}</p>` : ''}
-            ${review.rule_id ? `<p><strong>Rule ID:</strong> ${review.rule_id}</p>` : ''}
-            ${review.category ? `<p><strong>Category:</strong> ${review.category}</p>` : ''}
-        </div>
-        <hr>
-    `).join('');
+    if (reviews.length === 1) {
+        const review = reviews[0];
+        const html = `
+            <div class="review-item">
+                <h3><strong>File:</strong> ${review.file}</h3>
+                <h3><strong>Severity:</strong> <span class="severity-${review.severity}">${review.severity}</span></h3>
+                <h3><strong>Issue:</strong> ${review.issue}</h3>
+                <h3><strong>Suggestion:</strong> ${review.suggestion}</h3>
+                ${review.rule_id ? `<h3><strong>Rule Id:</strong> ${review.rule_id}</h3>` : ''}
+                ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}
+                ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="save-ai-review-btn" class="btn btn-primary">Save AI Review to Database</button>
+            </div>
+        `;
+        document.getElementById("ai-review-results").innerHTML = html;
+        
+        const saveBtn = document.getElementById("save-ai-review-btn");
+        if (saveBtn) {
+            saveBtn.addEventListener("click", saveAIReviewToDB);
+        }
+    } else {
+        const html = reviews.map((review, index) => `
+            <div class="review-item">
+                <h3><strong>File:</strong> ${review.file}</h3>
+                <h3><strong>Severity:</strong> <span class="severity-${review.severity}">${review.severity}</span></h3>
+                <h3><strong>Issue:</strong> ${review.issue}</h3>
+                <h3><strong>Suggestion:</strong> ${review.suggestion}</h3>
+                ${review.rule_id ? `<h3><strong>Rule Id:</strong> ${review.rule_id}</h3>` : ''}
+                ${review.category ? `<h3><strong>Category:</strong> ${review.category}</h3>` : ''}
+                ${review.line ? `<h3><strong>Line:</strong> ${review.line}</h3>` : ''}
+            </div>
+            ${index < reviews.length - 1 ? '<hr>' : ''}
+        `).join('');
+        
+        document.getElementById("ai-review-results").innerHTML = html + `
+            <div style="margin-top: 20px;">
+                <button id="save-ai-review-btn" class="btn btn-primary">Save All AI Reviews to Database</button>
+            </div>
+        `;
+        
+        latestAIReview = reviews;
+        
+        const saveBtn = document.getElementById("save-ai-review-btn");
+        if (saveBtn) {
+            saveBtn.addEventListener("click", saveAIReviewToDB);
+        }
+    }
+}
 
-    aiRev.innerHTML = html;
+async function saveAIReviewToDB(e) {
+    e.preventDefault();
+    
+    if (!latestAIReview) {
+        alert("No AI review data to save!");
+        return;
+    }
+    
+    try {
+        const BASE_URL = "http://localhost:8080/Assignment2/api/";
+        const url = BASE_URL + "add_ai_review.php";
+        
+        const reviewToSave = Array.isArray(latestAIReview) ? latestAIReview[0] : latestAIReview;
+        
+        const response = await axios.post(url, {
+            severity: reviewToSave.severity,
+            issue_title: reviewToSave.issue,
+            suggestion: reviewToSave.suggestion,
+            rule_id: reviewToSave.rule_id || '',
+            category: reviewToSave.category || '',
+            line_number: reviewToSave.line || ''
+        });
+        
+        console.log("Save AI review response:", response.data);
+        
+        if (response.data.success) {
+            alert("AI Review saved to database successfully!");
+            displayCombinedReviews(); 
+        } else {
+            alert("Failed to save AI review: " + (response.data.error || "Unknown error"));
+        }
+    } catch (error) {
+        console.error("Error saving AI review:", error);
+        alert("Failed to save AI review. Try again.");
+    }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOM loaded");
     
-    getReviews();
+    displayCombinedReviews();
+    
     const submitReviewBtn = document.getElementById("submit-review");
-    if (submitReviewBtn) {
-        submitReviewBtn.addEventListener("click", addReview);
-    }
+    submitReviewBtn.addEventListener("click", function(e) {
+        addReview(e).then(() => {
+            displayCombinedReviews(); 
+        });
+    });
     
     const submitCodeBtn = document.getElementById("submit-code");
     if (submitCodeBtn) {
         submitCodeBtn.addEventListener("click", addResponse);
     }
 });
+
+
+async function displayCombinedReviews() {
+    try {
+        const [humanResponse, aiResponse] = await Promise.all([
+            axios.get("http://localhost:8080/Assignment2/api/get_human_reviews.php"),
+            axios.get("http://localhost:8080/Assignment2/api/get_ai_reviews.php")
+        ]);
+
+        const humanData = humanResponse.data.data || [];
+        const aiData = aiResponse.data.data || [];
+        const maxLength = Math.max(humanData.length, aiData.length);
+        
+        const tableBody = document.getElementById("review-results-body");
+        
+        if (maxLength === 0) {
+            tableBody.innerHTML = "<tr><td colspan='3'>No reviews found</td></tr>";
+            return;
+        }
+
+        tableBody.innerHTML = '';
+        for (let i = 0; i < maxLength; i++) {
+            const human = humanData[i];
+            const ai = aiData[i];
+            
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${ai ? `
+                        <div>
+                            <span class="severity-${ai.severity}">${ai.severity}</span>
+                            <div><strong>Issue:</strong> ${ai.issue_title}</div>
+                            <div><strong>Suggestion:</strong> ${ai.suggestion}</div>
+                        </div>
+                    ` : 'No review'}</td>
+                    <td>${human ? `
+                        <div>
+                            <span class="severity-${human.severity}">${human.severity}</span>
+                            <div><strong>Issue:</strong> ${human.issue_title}</div>
+                            <div><strong>Suggestion:</strong> ${human.suggestion}</div>
+                        </div>
+                    ` : 'No review'}</td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error("Error loading combined reviews:", error);
+    }
+}

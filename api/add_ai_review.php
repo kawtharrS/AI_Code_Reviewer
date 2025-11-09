@@ -32,7 +32,7 @@ if (isset($data["issue_title"]) && $data["issue_title"] != "") {
 }
 
 if (isset($data["suggestion"]) && $data["suggestion"] != "") {
-    $suggestion = $data["suggestion"]; // Fixed: use $suggestion, not $name
+    $suggestion = $data["suggestion"]; 
 } else {
     $response = [];
     $response["success"] = false;
@@ -46,7 +46,7 @@ $category = $data["category"] ?? "";
 $line_number = $data["line_number"] ?? 0;
 
 try {
-    $sql = "INSERT INTO security_findings (severity, issue_title, suggestion, rule_id, category, line_number) VALUES (?,?,?,?,?,?)";
+    $sql = "INSERT INTO ai_reviews (severity, issue_title, suggestion, rule_id, category, line_number) VALUES (?,?,?,?,?,?)";
     $query = $mysql->prepare($sql);
     $query->bind_param("sssssi", $severity, $issue_title, $suggestion, $rule_id, $category, $line_number);
     

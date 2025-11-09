@@ -2,7 +2,7 @@
 
     include("./connection.php");
 
-    $sql = "SELECT * FROM security_findings limit 5 ";
+    $sql = "SELECT * FROM security_findings ORDER BY id DESC LIMIT 5";
     $query = $mysql->prepare($sql);
     $query->execute();
 

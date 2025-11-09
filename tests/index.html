@@ -6,84 +6,87 @@
     <title>AI Code Review</title>
     <link rel="stylesheet" href="./style_code_review.css">
 </head>
-<body>    
+<body>
     <div class="grid-container">
+
         <nav class="navbar">
             <div class="logo-container">
                 <div class="logo-text">AI Code Review</div>
             </div>
         </nav>
-        
+
         <section class="main-section">
-            <div class="review-container">
+            <div class="main-content">
+
+                <!-- Review Table -->
+                <table class="review-table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>AI Review</th>
+                            <th>Human Review</th>
+                        </tr>
+                    </thead>
+                    <tbody id="review-results-body"></tbody>
+                </table>
+                <br><br>
                 <div class="content-wrapper">
-                    <div class="review-results">
-                        <table class="review-table">
-                            <thead>
-                                <tr>
-                                    <th>File Name</th>
-                                    <th>AI Review</th>
-                                    <th>Human Review</th>
-                                </tr>
-                            </thead>
-                            <tbody id="review-results-body">
-                            </tbody>
-                        </table>
-                    </div>
+
                     <div class="code-input-section">
                         <h2>Enter your code here</h2>
                         <div class="code-form">
-                            <div class="form-group">
-                                <label for="code-input">Your Code</label>
-                                <textarea id="code-input" placeholder="Paste your code here" rows="6" required></textarea>
-                            </div>
+                            <label for="code-input">Your Code</label>
+                            <textarea id="code-input" placeholder="Paste your code here"></textarea>
                             <button type="button" class="submit-btn" id="submit-code">Analyze Code with AI</button>
                         </div>
                     </div>
+
                     <div class="ai-review-section">
                         <h2>AI Review Results</h2>
-                        <div class="review-output">
-                            <div id="ai-review-results">
-                            </div>
+                        <div class="review-output" id="ai-review-results">
+                            <p class="loading">Waiting for review...</p>
                         </div>
                     </div>
-                    <div class="code-input-section">
-                        <h2>Enter your code review</h2>
-                        <div class="code-form">
-                            <div class="form-group">
-                                <label for="severity-input">Severity</label>
-                                <textarea id="severity-input" placeholder="eg. High, Meduim, Low" rows="6" required></textarea>
 
-                                <label for="issue-input">Issue</label>
-                                <textarea id="issue-input" placeholder="short identifier of the problem" rows="6" required></textarea>
+                </div>
 
-                                <label for="suggestion-input">Suggestion</label>
-                                <textarea id="suggestion-input" placeholder="concrete remediation step" rows="6" required></textarea>
+                <!-- Human Review -->
+                <div class="code-input-section">
+                    <h2>Human Code Review</h2>
+                    <div class="code-form">
+                        <label for="severity-input">Severity</label>
+                        <textarea id="severity-input" placeholder="High / Medium / Low"></textarea>
 
-                                <label for="rule-input">Rule Id</label>
-                                <textarea id="rule-input" placeholder="Enter the rule id" rows="6" required></textarea>
+                        <label for="issue-input">Issue</label>
+                        <textarea id="issue-input" placeholder="Short identifier"></textarea>
 
-                                <label for="category-input">Category</label>
-                                <textarea id="category-input" placeholder="Enter the category" rows="6" required></textarea>
+                        <label for="suggestion-input">Suggestion</label>
+                        <textarea id="suggestion-input" placeholder="Remediation step"></textarea>
 
-                                <label for="line-input">Line</label>
-                                <textarea id="line-input" placeholder="eg. line 45" rows="6" required></textarea>
-                            </div>
-                            <button type="button" class="submit-btn" id="submit-review">Submit your review</button>
-                        </div>
+                        <label for="rule-input">Rule Id</label>
+                        <textarea id="rule-input" placeholder="e.g. SEC-001"></textarea>
+
+                        <label for="category-input">Category</label>
+                        <textarea id="category-input" placeholder="Security / Performance"></textarea>
+
+                        <label for="line-input">Line</label>
+                        <textarea id="line-input" placeholder="e.g. Line 45"></textarea>
+
+                        <button type="button" class="submit-btn" id="submit-review">Submit Review</button>
                     </div>
                 </div>
+
             </div>
         </section>
 
         <footer class="footer">
             <div class="footer-content">
-                <div class="copyright">
-                    <p>&copy; 2025 AI Code Review. All rights reserved.</p>
-                </div>
+                <p>&copy; 2025 AI Code Review. All rights reserved.</p>
             </div>
         </footer>
+
     </div>
+
     <script src="./axios.min.js"></script>
     <script type="module" src="./test.js"></script>
 </body>

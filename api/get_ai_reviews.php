@@ -2,7 +2,7 @@
 
     include("./connection.php");
 
-    $sql = "SELECT * FROM ai_reviews limit 5 ";
+    $sql = "SELECT * FROM ai_reviews ORDER BY id DESC LIMIT 5";
     $query = $mysql->prepare($sql);
     $query->execute();
 
