@@ -1,4 +1,5 @@
 backend/config/key.txt
-
+backend/config/.env
+*.env
 *.log
 *key.txt
