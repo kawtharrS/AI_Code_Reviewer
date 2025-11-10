@@ -4,124 +4,79 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/curlService.php';
 
 function review_code($filename, $language, $code) {
-    global $URL_OPENAI, $API_KEY, $MODEL_VERSION;
+    global $URL_DEEPSEEK, $API_KEY, $MODEL_VERSION;
 
-    $ai_url = $URL_OPENAI ?? ($AI_REVIEW_API_URL ?? null);
+    $ai_url = $URL_DEEPSEEK;
 
-
-    $prompt = "
-    You are an expert senior developer performing a strict code review.
-
-    Analyze the following code.
-
-    File: {$filename}
-    Language: {$language}
-
-    Code:
-    \"\"\"
-    {$code}
-    \"\"\"
-
-    Return ONLY valid JSON as an array of findings.
-    Each finding must contain:
-    - severity (high | medium | low)
-    - file (string)
-    - issue (short description of the problem)
-    - suggestion (specific remediation steps)
-    Optional fields:
-    - line (number)
-    - rule_id (string)
-    - category (e.g. security, performance, maintainability)
-
-    Example JSON output:
-    [
-    {
-        \"severity\": \"high\",
-        \"file\": \"user2.py\",
-        \"issue\": \"No input validation for user registration\",
-        \"suggestion\": \"Implement proper input validation using a schema validator\",
-        \"line\": 45,
-        \"rule_id\": \"SEC001\",
-        \"category\": \"security\"
+    if (empty($ai_url)) {
+        throw new Exception("DeepSeek API URL is not configured");
     }
-    ]
 
-    DO NOT include explanations, markdown, or text outside the JSON array.
-    ";
+    if (empty($API_KEY)) {
+        throw new Exception("DeepSeek API key is not configured");
+    }
+
+    $messages = [
+        [
+            "role" => "system", 
+            "content" => "You are a code review expert. Return ONLY valid JSON array matching: [{severity(high|medium|low), file(string), issue(string), suggestion(string), line(optional number), rule_id(optional string), category(security|performance|readability|maintainability|best-practice|bug-risk)}]. No other text."
+        ],
+        [
+            "role" => "user",
+            "content" => "Review this {$language} code from {$filename} and return findings as JSON array:\n\n{$code}\n\nRequired fields: severity, file, issue, suggestion. Optional: line, rule_id, category. Return ONLY JSON array."
+        ]
+    ];
 
     $headers = [
-        'Content-Type: application/json'
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $API_KEY
     ];
-    if (!empty($API_KEY)) {
-        $headers[] = 'Authorization: Bearer ' . $API_KEY;
-    }
 
     $payload = [
-        'model' => $MODEL_VERSION ?? 'gpt-4o',
-        'input' => $prompt
+        'model' => $MODEL_VERSION,
+        'messages' => $messages,
+        'temperature' => 0.1, 
+        'max_tokens' => 4000,
+        'response_format' => ['type' => 'json_object'] 
     ];
 
-    //call openai
     try {
+        
         $response_raw = call_api('POST', $ai_url, $payload, $headers);
-
         $response = json_decode($response_raw, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('AI response JSON decode error: ' . json_last_error_msg());
+            throw new Exception('Invalid JSON response from AI API');
         }
 
         $content = null;
         if (isset($response['choices'][0]['message']['content'])) {
             $content = $response['choices'][0]['message']['content'];
-        } elseif (isset($response['output']) && is_array($response['output'])) {
-            foreach ($response['output'] as $out) {
-                if (isset($out['content']) && is_array($out['content'])) {
-                    foreach ($out['content'] as $c) {
-                        if (isset($c['type']) && ($c['type'] === 'output_text' || $c['type'] === 'message')) {
-                            $content = $c['text'] ?? ($c['content'] ?? null);
-                            break 2;
-                        }
-                        if (isset($c['text'])) {
-                            $content = $c['text'];
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        if ($content === null) {
-            error_log('AI response did not contain expected text content: ' . print_r($response, true));
+        } else {
+            throw new Exception('Unexpected response format from DeepSeek API');
         }
 
         if (preg_match('/\[.*\]/s', $content, $matches)) {
             $content = $matches[0];
+        } elseif (preg_match('/\{.*\}/s', $content, $matches)) {
+            $temp_obj = json_decode($matches[0], true);
+            if (isset($temp_obj['findings']) && is_array($temp_obj['findings'])) {
+                $content = json_encode($temp_obj['findings']);
+            }
         }
 
         $decoded = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('Decoded content is not valid JSON: ' . json_last_error_msg());
+            throw new Exception('AI response contained invalid JSON');
         }
 
         if (!is_array($decoded)) {
+            error_log('Decoded content is not an array: ' . print_r($decoded, true));
+            $decoded = []; 
         }
 
+        //Normalization takes raw data and clean thim in order to fit 
         global $ALLOWED_SEVERITIES;
-        $allowedCategories = [
-            'security','performance','best-practice','maintainability','readability','bug-risk'
-        ];
-
-        $categoryMap = [
-            'correctness' => 'bug-risk',
-            'style' => 'readability',
-            'maintainability' => 'maintainability',
-            'security' => 'security',
-            'performance' => 'performance',
-            'best-practice' => 'best-practice',
-            'readability' => 'readability',
-            'bug-risk' => 'bug-risk'
-        ];
 
         $normalizedList = [];
         foreach ($decoded as $item) {
@@ -137,32 +92,11 @@ function review_code($filename, $language, $code) {
             $issueVal = isset($it['issue']) ? (string)$it['issue'] : 'Issue not provided';
             $suggestionVal = isset($it['suggestion']) ? (string)$it['suggestion'] : '';
 
-            $lineVal = null;
-            if (isset($it['line']) && is_numeric($it['line'])) {
-                $lineVal = (int)$it['line'];
-                if ($lineVal < 1) $lineVal = null;
-            }
-
-            $ruleVal = isset($it['rule_id']) ? (string)$it['rule_id'] : null;
-
-            $catRaw = isset($it['category']) ? strtolower((string)$it['category']) : null;
-            $catVal = null;
-            if ($catRaw) {
-                if (isset($categoryMap[$catRaw])) {
-                    $catVal = $categoryMap[$catRaw];
-                } elseif (in_array($catRaw, $allowedCategories)) {
-                    $catVal = $catRaw;
-                }
-            }
-
             $normalizedList[] = [
                 'severity' => $severity,
                 'file' => $fileVal,
                 'issue' => $issueVal,
                 'suggestion' => $suggestionVal,
-                'line' => $lineVal,
-                'rule_id' => $ruleVal,
-                'category' => $catVal
             ];
         }
 
@@ -170,8 +104,7 @@ function review_code($filename, $language, $code) {
 
     } catch (Exception $e) {
         error_log('Error in review_code: ' . $e->getMessage());
+        throw $e; 
     }
 }
-
-
 ?>

@@ -74,11 +74,7 @@ try {
     respond(true, "success", ["review" => $review_result]);
     
 } catch (Exception $e) {
-    // Log the error
-    error_log("Error in review.php: " . $e->getMessage());
-    error_log("Stack trace: " . $e->getTraceAsString());
     
-    // Return error response
     http_response_code(500);
     respond(false, "Server error: " . $e->getMessage());
 }
