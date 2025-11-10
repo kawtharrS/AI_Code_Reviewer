@@ -1,62 +1,185 @@
 <?php
-include __DIR__ . "/../schemas/schemas.php";
-include __DIR__ . "/curlService.php";
-include __DIR__ . "/../../config/config.php";
-include __DIR__ . "/../helpers/logHelper.php";
 
-function review_code($filename, $language, $code){
-    global $MODEL_VERSION, $API_KEY, $SCHEMA, $STRICT, $STEP_TYPE, $URL_OPENAI, $LOG_FILE;
-    $header = array("Content-Type: application/json", "Authorization: Bearer {$API_KEY}");
-    $instructions = "talk like a senior developer who is review/criticizing the code. Don't give vague general problem description and let the suggestions be {$STEP_TYPE} concrete remediation steps";
-    $user_input = sprintf(
-        "file = %s, language = %s, code = %s",
-        json_encode($filename),
-        json_encode($language),
-        json_encode($code)
-    );
-    $model_prompt = [
-        "model" => $MODEL_VERSION,
-        "reasoning" => ["effort" => "low"],
-        "input" => [
-            ["role" => "developer", "content" => $instructions],
-            ["role" => "user", "content" => $user_input]
-        ],
-        "text" => [
-            "format" => [
-                "type" => "json_schema",
-                "name" => "code_review",
-                "schema" => $SCHEMA,
-                "strict" => $STRICT
-            ]
-        ]
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/curlService.php';
+
+function review_code($filename, $language, $code) {
+    global $URL_OPENAI, $API_KEY, $MODEL_VERSION;
+
+    $ai_url = $URL_OPENAI ?? ($AI_REVIEW_API_URL ?? null);
+
+
+    $prompt = "
+    You are an expert senior developer performing a strict code review.
+
+    Analyze the following code.
+
+    File: {$filename}
+    Language: {$language}
+
+    Code:
+    \"\"\"
+    {$code}
+    \"\"\"
+
+    Return ONLY valid JSON as an array of findings.
+    Each finding must contain:
+    - severity (high | medium | low)
+    - file (string)
+    - issue (short description of the problem)
+    - suggestion (specific remediation steps)
+    Optional fields:
+    - line (number)
+    - rule_id (string)
+    - category (e.g. security, performance, maintainability)
+
+    Example JSON output:
+    [
+    {
+        \"severity\": \"high\",
+        \"file\": \"user2.py\",
+        \"issue\": \"No input validation for user registration\",
+        \"suggestion\": \"Implement proper input validation using a schema validator\",
+        \"line\": 45,
+        \"rule_id\": \"SEC001\",
+        \"category\": \"security\"
+    }
+    ]
+
+    DO NOT include explanations, markdown, or text outside the JSON array.
+    ";
+
+    $headers = [
+        'Content-Type: application/json'
     ];
+    if (!empty($API_KEY)) {
+        $headers[] = 'Authorization: Bearer ' . $API_KEY;
+    }
+
+    $payload = [
+        'model' => $MODEL_VERSION ?? 'gpt-4o',
+        'input' => $prompt
+    ];
+
     //call openai
-    try{
-        $response = call_api("post", $URL_OPENAI, $header, $model_prompt);
-        if(!$response){
-            error_log("null: " . print_r($response, true) . "\n", 3, $LOG_FILE);
-            throw new Exception("Check the api version mate!");
+    try {
+        $response_raw = call_api('POST', $ai_url, $payload, $headers);
+
+        $response = json_decode($response_raw, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('AI response JSON decode error: ' . json_last_error_msg());
         }
-        if(isset($response["status"]) && $response["status"] != "completed"){
-            error_log("failed response: " . json_encode($response) . "\n", 3, $LOG_FILE);
-            throw new Exception("Failed response from open ai");
-        }
-        if(isset($response["output"]) && !empty($response["output"])){
-            foreach($response["output"] as $obj){
-                if($obj["type"] == "message" && $obj["role"] == "assistant"){
-                    if($obj["status"] == "completed"){
-                        return $obj["content"][0]["text"];
-                    } else {
-                        error_log("Incomplete review: " . json_encode($response) . "\n", 3, $LOG_FILE);
-                        throw new Exception("Incomplete review!");
+
+        $content = null;
+        if (isset($response['choices'][0]['message']['content'])) {
+            $content = $response['choices'][0]['message']['content'];
+        } elseif (isset($response['output']) && is_array($response['output'])) {
+            foreach ($response['output'] as $out) {
+                if (isset($out['content']) && is_array($out['content'])) {
+                    foreach ($out['content'] as $c) {
+                        if (isset($c['type']) && ($c['type'] === 'output_text' || $c['type'] === 'message')) {
+                            $content = $c['text'] ?? ($c['content'] ?? null);
+                            break 2;
+                        }
+                        if (isset($c['text'])) {
+                            $content = $c['text'];
+                            break 2;
+                        }
                     }
                 }
             }
         }
-        error_log("No output: " . json_encode($response) . "\n", 3, $LOG_FILE);
-        throw new Exception("No output was found in the agent response.");
-    } catch (Exception $e){
-        throw $e;
+
+        if ($content === null) {
+            error_log('AI response did not contain expected text content: ' . print_r($response, true));
+        }
+
+        // Extract JSON array from content
+        if (preg_match('/\[.*\]/s', $content, $matches)) {
+            $content = $matches[0];
+        }
+
+        $decoded = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('Decoded content is not valid JSON: ' . json_last_error_msg());
+        }
+
+        // Ensure we return an array of findings
+        if (!is_array($decoded)) {
+        }
+
+        // Normalize each finding to match the frontend schema expectations
+        global $ALLOWED_SEVERITIES;
+        $allowedCategories = [
+            'security','performance','best-practice','maintainability','readability','bug-risk'
+        ];
+
+        $categoryMap = [
+            'correctness' => 'bug-risk',
+            'style' => 'readability',
+            'maintainability' => 'maintainability',
+            'security' => 'security',
+            'performance' => 'performance',
+            'best-practice' => 'best-practice',
+            'readability' => 'readability',
+            'bug-risk' => 'bug-risk'
+        ];
+
+        $normalizedList = [];
+        foreach ($decoded as $item) {
+            if (!is_array($item) && !is_object($item)) continue;
+            $it = (array)$item;
+
+            // severity: normalize to lowercase and map to allowed set
+            $severity = isset($it['severity']) ? strtolower((string)$it['severity']) : 'low';
+            if (!empty($ALLOWED_SEVERITIES) && !in_array($severity, $ALLOWED_SEVERITIES)) {
+                $severity = 'low';
+            }
+
+            // file, issue, suggestion required by schema
+            $fileVal = isset($it['file']) ? (string)$it['file'] : $filename;
+            $issueVal = isset($it['issue']) ? (string)$it['issue'] : 'Issue not provided';
+            $suggestionVal = isset($it['suggestion']) ? (string)$it['suggestion'] : '';
+
+            // line: integer or null
+            $lineVal = null;
+            if (isset($it['line']) && is_numeric($it['line'])) {
+                $lineVal = (int)$it['line'];
+                if ($lineVal < 1) $lineVal = null;
+            }
+
+            // rule_id: string or null
+            $ruleVal = isset($it['rule_id']) ? (string)$it['rule_id'] : null;
+
+            // category: map common labels into allowed categories, otherwise null
+            $catRaw = isset($it['category']) ? strtolower((string)$it['category']) : null;
+            $catVal = null;
+            if ($catRaw) {
+                if (isset($categoryMap[$catRaw])) {
+                    $catVal = $categoryMap[$catRaw];
+                } elseif (in_array($catRaw, $allowedCategories)) {
+                    $catVal = $catRaw;
+                }
+            }
+
+            $normalizedList[] = [
+                'severity' => $severity,
+                'file' => $fileVal,
+                'issue' => $issueVal,
+                'suggestion' => $suggestionVal,
+                'line' => $lineVal,
+                'rule_id' => $ruleVal,
+                'category' => $catVal
+            ];
+        }
+
+        return $normalizedList;
+
+    } catch (Exception $e) {
+        error_log('Error in review_code: ' . $e->getMessage());
     }
 }
+
+
 ?>
