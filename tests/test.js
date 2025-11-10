@@ -95,7 +95,6 @@ async function addResponse(x) {
         
         const file = codeInput.files[0];
         
-        // Read the file content
         const fileContent = await readFileAsText(file);
         
         if (!fileContent) {
@@ -107,7 +106,6 @@ async function addResponse(x) {
         document.getElementById("ai-review-results").innerHTML = 
             "<p>Analyzing code...</p>";
         
-        // Send as JSON with the actual code content
         const response = await axios.post(API_URL, 
             { 
                 code: fileContent,
@@ -123,17 +121,14 @@ async function addResponse(x) {
 
         console.log("Review response:", response.data);
 
-        // Check if response has the expected structure
         if (!response.data || typeof response.data !== 'object') {
             throw new Error("Invalid response format from server");
         }
 
-        // The API returns the findings in several possible shapes. Prefer `response.data.review`.
         let reviewData = null;
         if (response.data.review && Array.isArray(response.data.review)) {
             reviewData = response.data.review;
         } else if (response.data.data && Array.isArray(response.data.data)) {
-            // some older endpoints may return data as an array directly
             reviewData = response.data.data;
         } else if (Array.isArray(response.data)) {
             reviewData = response.data;
@@ -173,8 +168,8 @@ async function addResponse(x) {
     }
 }
 
-// Helper function to read file content
 function readFileAsText(file) {
+    // a promise is special object that represents a value that will be available i the future
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
@@ -183,7 +178,6 @@ function readFileAsText(file) {
     });
 }
 
-// Helper function to determine language from filename
 function getLanguageFromFilename(filename) {
     const ext = filename.split('.').pop().toLowerCase();
     const langMap = {
