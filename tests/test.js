@@ -110,7 +110,7 @@ async function addResponse(x) {
             { 
                 code: fileContent,
                 file: file.name,
-                language: getLanguageFromFilename(file.name)
+                language: getLang(file.name)
             },
             {
                 headers: {
@@ -178,7 +178,7 @@ function readFileAsText(file) {
     });
 }
 
-function getLanguageFromFilename(filename) {
+function getLang(filename) {
     const ext = filename.split('.').pop().toLowerCase();
     const langMap = {
         'js': 'javascript',
