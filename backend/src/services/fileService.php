@@ -4,7 +4,6 @@ include __DIR__ . "/../../config/config.php";
 function process_upload(array $file){
     global $MAX_FILE_SIZE, $UPLOAD_DIR, $ALLOWED_FILE_TYPES;
 
-    // Check upload error
     if(!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK){
         throw new Exception("File upload error: " . ($file['error'] ?? 'unknown'));
     }

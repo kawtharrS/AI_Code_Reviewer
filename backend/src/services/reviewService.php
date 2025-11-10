@@ -95,7 +95,6 @@ function review_code($filename, $language, $code) {
             error_log('AI response did not contain expected text content: ' . print_r($response, true));
         }
 
-        // Extract JSON array from content
         if (preg_match('/\[.*\]/s', $content, $matches)) {
             $content = $matches[0];
         }
@@ -105,11 +104,9 @@ function review_code($filename, $language, $code) {
             error_log('Decoded content is not valid JSON: ' . json_last_error_msg());
         }
 
-        // Ensure we return an array of findings
         if (!is_array($decoded)) {
         }
 
-        // Normalize each finding to match the frontend schema expectations
         global $ALLOWED_SEVERITIES;
         $allowedCategories = [
             'security','performance','best-practice','maintainability','readability','bug-risk'
@@ -131,28 +128,23 @@ function review_code($filename, $language, $code) {
             if (!is_array($item) && !is_object($item)) continue;
             $it = (array)$item;
 
-            // severity: normalize to lowercase and map to allowed set
             $severity = isset($it['severity']) ? strtolower((string)$it['severity']) : 'low';
             if (!empty($ALLOWED_SEVERITIES) && !in_array($severity, $ALLOWED_SEVERITIES)) {
                 $severity = 'low';
             }
 
-            // file, issue, suggestion required by schema
             $fileVal = isset($it['file']) ? (string)$it['file'] : $filename;
             $issueVal = isset($it['issue']) ? (string)$it['issue'] : 'Issue not provided';
             $suggestionVal = isset($it['suggestion']) ? (string)$it['suggestion'] : '';
 
-            // line: integer or null
             $lineVal = null;
             if (isset($it['line']) && is_numeric($it['line'])) {
                 $lineVal = (int)$it['line'];
                 if ($lineVal < 1) $lineVal = null;
             }
 
-            // rule_id: string or null
             $ruleVal = isset($it['rule_id']) ? (string)$it['rule_id'] : null;
 
-            // category: map common labels into allowed categories, otherwise null
             $catRaw = isset($it['category']) ? strtolower((string)$it['category']) : null;
             $catVal = null;
             if ($catRaw) {
