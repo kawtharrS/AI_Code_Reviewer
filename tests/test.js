@@ -169,7 +169,7 @@ async function addResponse(x) {
 }
 
 function readFileAsText(file) {
-    // a promise is special object that represents a value that will be available i the future
+    // a promise is special object that represents value that will be available i the future
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
