@@ -1,12 +1,12 @@
 <?php
-$env = parse_ini_file(".env"); 
-$API_KEY = $env['OPENAI_KEY'] ?? '';
-$URL_OPENAI = "https://api.openai.com/v1/responses";
-$STEP_TYPE = "short"; // short | long | persice | helpful etc..
+$env = parse_ini_file(__DIR__ . "/.env");
+$API_KEY = $env['DEEPSEEK_KEY'] ?? ''; 
+$URL_DEEPSEEK = "https://api.deepseek.com/v1/chat/completions"; 
+$STEP_TYPE = "short";
 $ALLOWED_SEVERITIES = ["high", "medium", "low"];
-$MODEL_VERSION = "gpt-4o-mini";
-$ALLOWED_FILE_TYPES = []; //empty = all file types
-$MAX_FILE_SIZE = 5 * 1024 * 1024; //size in bytes
+$MODEL_VERSION = "deepseek-chat"; 
+$ALLOWED_FILE_TYPES = [];
+$MAX_FILE_SIZE = 5 * 1024 * 1024;
 $UPLOAD_DIR = dirname(__DIR__) . "/uploads";
 $STRICT = true;
 $AI_REVIEW_API_URL = "http://localhost:8080/Assignment2/backend/public/review.php"; 
